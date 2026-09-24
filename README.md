@@ -2,24 +2,49 @@
 
 A cost-optimized, production-grade multi-agent orchestration platform designed to extract, validate, and report on high-volume automotive telemetry and incident datasets. This repository contains both a high-fidelity local prototyping framework and the infrastructure definitions for cloud-native serverless deployment.
 
-## 📊 Platform Architecture
+---
 
-The system splits computational workloads and reasoning tasks across specialized agent runtimes to enforce strict data integrity boundaries and minimize token overhead.
+## 📊 Multi-Agent Collaborative Workflow Diagram
+
+The system operates via a continuous data-loop framework. Specialized agents communicate sequentially using structured JSON text variables to prevent token bloat and filter out software errors:
 
 ```text
- ┌──────────────────────┐      ┌─────────────────────────┐      ┌────────────────────────┐
- │ 📝 Input Data Stream ├─────►│ 🤖 Data Extraction Agent├─────►│ 🤖 QA Validation Agent │
- │  (Raw Incident Logs) │      │   (Structures Parameters)│      │  (Flags Inconsistencies)│
- └──────────────────────┘      └─────────────────────────┘      └───────────┬────────────┘
-                                                                            │
-                                                                            ▼
- ┌──────────────────────┐      ┌─────────────────────────┐      ┌────────────────────────┐
- │ 📱 Client Dashboard  │◄─────┤ 📋 Executive Safety Rep.│◄─────┤ 🤖 Report Gen. Agent   │
- │   (React / Vercel)   │      │   (Vetted Production)   │      │  (Compiles Analytics)  │
- └──────────────────────┘      └─────────────────────────┘      └────────────────────────┘
+       [ Raw Unstructured Fleet Logs Input ]
+                         │
+                         ▼
+        ┌─────────────────────────────────┐
+        │   🤖 DataExtractionAgent        │
+        │   - Parses metric frequencies   │
+        │   - Creates Initial JSON Schema │
+        └────────────────┬────────────────┘
+                         │
+                         │ (Initial JSON Payload Passed)
+                         ▼
+        ┌─────────────────────────────────┐
+        │   🤖 ValidationAgent (QA Loop)  │
+        │   - Audits math total boundaries│◄───┐
+        │   - Inspects for hallucinations │    │ (Self-Correction Fallback
+        └────────────────┬────────────────┘    │  If Validation FAILS)
+                         │                     │
+                         ├─► [FAILS AUDIT] ────┘
+                         │
+                         └─► [PASSES AUDIT]
+                                 │
+                                 │ (Vetted Schema Payload)
+                                 ▼
+        ┌─────────────────────────────────┐
+        │   🤖 ReportAgent                │
+        │   - Appends severity scores     │
+        │   - Compiles executive briefs   │
+        └────────────────┬────────────────┘
+                         │
+                         ▼
+      [ Production-Certified Safety Report Output ]
 ```
 
-### 🛡️ Core Engineering Principles
+---
+
+## 🛡️ Core Engineering Principles
 1. **Metadata Isolation Boundary:** The platform abstracts massive flat files into structured metadata schemas and counts before performing inference, ensuring flat-rate token consumption regardless of dataset growth.
 2. **Separation of Concerns:** Data cleaning and schema standardization are handled upstream via high-performance scripting layers, reserving LLM processing strictly for high-level semantic analysis and logical reasoning.
 3. **Automated Critique Loop:** An independent Quality Assurance agent programmatically audits output parameters against the source data, catching math mismatches or text hallucinations before final artifact compilation.
@@ -50,12 +75,12 @@ def call_agent(agent_name, system_prompt, user_prompt):
     )
     return response.choices.message.content
 
-# Raw vehicle incident data context
+# Raw vehicle incident data context - COMPLETELY NEUTRALIZED
 raw_data = """
 Head Gasket Failures: 14 incidents (50%) - CRITICAL
 - Engine head gaskets failing even with regular maintenance
 - Causes sudden loss of power at highway speeds
-- Primarily affects 2018 Honda Accord 1.5L
+- Primarily affects 2018 Sedan Model X 1.5L
 
 Electrical/Warning Systems: 6 incidents
 - Airbag errors appearing randomly
@@ -65,9 +90,9 @@ Fuel System Failures: 3 incidents
 - Fuel injector cascading failures
 - Fuel pump failures
 
-Manufacturer: Honda (100% of database)
-- Honda Accord 2018: 25 incidents (89%)
-- Acura RDX 2012: 3 incidents
+Manufacturer: Enterprise Fleet Logistics (100% of database)
+- Sedan Model X 2018: 25 incidents (89%)
+- SUV Model Y 2012: 3 incidents
 """
 
 if __name__ == "__main__":
